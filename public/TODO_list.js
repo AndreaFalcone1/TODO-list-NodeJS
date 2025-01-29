@@ -5,6 +5,32 @@ let tableData =  document.getElementById("tableData");
 let cont = 0;
 let todos = [];
 
+const send = (todo) => {
+   return new Promise((resolve, reject) => {
+      fetch("/todo/add", {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(todo)
+        })
+        .then((response) => response.json())
+        .then((json) => {
+            resolve(json); // risposta del server all'aggiunta
+        })
+    })
+}
+
+const load = () => {
+   return new Promise((resolve, reject) => {
+        fetch("/todo")
+        .then((response) => response.json())
+        .then((json) => {
+            resolve(json); // risposta del server con la lista
+        })
+    })
+}
+
 submitTask.onclick = () => {
     todos.push({
         task : "<p>" + inputTask.value + "</p>",
@@ -13,11 +39,18 @@ submitTask.onclick = () => {
     });
 
     cont++;
-
+    
+    send({todos : todos})
+        .then(() => load())
+        .then(json => {
+            todos = json.todos
+        }),
+    inputTask.value = ""
     render(tableData);
 }
 
 const render = (parentElement) => {
+    load
 
     let html = ""
 
@@ -49,4 +82,7 @@ const render = (parentElement) => {
 
 }
 
-render(tableData);
+load().then((json) => {
+    todos = json.todos
+    render(tableData);
+})
