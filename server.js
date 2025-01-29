@@ -28,5 +28,5 @@ app.post("/todo/add", (req, res) => {
 // Avvio del server
 const PORT = 3000;
 app.listen(PORT, () => {
-    console.log(`Server in esecuzione su http://localhost:${PORT}`);
+    console.log('Server in esecuzione su http://localhost:' + PORT);
 });

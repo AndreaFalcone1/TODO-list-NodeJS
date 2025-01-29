@@ -54,8 +54,6 @@ submitTask.onclick = () => { //Click del botte per aggiungere una task
 }
 
 const render = (parentElement) => {
-    load
-
     let html = ""
 
     todos.forEach((e) => { //Intestazione della tabella
