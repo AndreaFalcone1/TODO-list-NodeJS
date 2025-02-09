@@ -30,15 +30,17 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public"))); // Serve i file statici dalla cartella "public"
 
 // Endpoint per ottenere la lista delle attività
-app.get("/todo", (req, res) => {
+app.get("/todo", async(req, res) => {
+    const todos = await select();
     res.json({ todos });
 });
 
 // Endpoint per aggiungere nuove attività
-app.post("/todo/add", (req, res) => {
+app.post("/todo/add", async(req, res) => {
     const newTodos = req.body.todos;
     if (Array.isArray(newTodos)) {
         todos = newTodos; // Sovrascrive la lista con la nuova ricevuta
+        await insert(todos);
         res.json({ success: true, todos });
     } else {
         res.status(400).json({ success: false, message: "Formato non valido" });
@@ -77,6 +79,7 @@ const insert = async function(todo) {
     return executeQuery(sql);
 }
 
+/*
 const remove = async function(id) {
     const sql = `
     DELETE todo
@@ -101,9 +104,11 @@ const update = (todo) => {
 
     return executeQuery(sql); 
 }
+*/
 
 // Avvio del server
 const PORT = 3000;
-app.listen(PORT, () => {
+app.listen(PORT, async() => {
+    await createTable();
     console.log('http in esecuzione su http://localhost:' + PORT);
 });
