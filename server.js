@@ -3,7 +3,27 @@ const bodyParser = require("body-parser");
 const path = require("path");
 const app = express();
 
+const fs = require('fs');
+const mysql = require('mysql2');
+
+const conf = JSON.parse(fs.readFileSync('conf.json'));
+const connection = mysql.createConnection(conf);
+
 let todos = []; // Array per memorizzare le attività
+
+// Eseguitore di Query
+const executeQuery = (sql) => {
+    return new Promise((resolve, reject) => {
+        connection.query(sql, function (err, result) {
+            if (err) {
+                console.error(err);
+                reject();
+            }
+            console.log('done');
+            resolve(result);
+        });
+    })
+}
 
 // Middleware per il parsing del corpo delle richieste
 app.use(bodyParser.json());
@@ -25,8 +45,65 @@ app.post("/todo/add", (req, res) => {
     }
 });
 
+const createTable = async function() {
+    return executeQuery(`
+    CREATE TABLE IF NOT EXISTS todo
+       ( id INT PRIMARY KEY, 
+          taskName VARCHAR(255) NOT NULL,
+          task VARCHAR(255) NOT NULL, 
+          finishTask VARCHAR(255) NOT NULL,
+          deleteTask VARCHAR(255) NOT NULL ); 
+       `);
+}
+
+const select = async function() {
+    const sql = `
+    SELECT id, taskName, task, finishTask, deleteTask FROM todo;
+       `;
+    return executeQuery(sql); 
+}
+
+const insert = async function(todo) {
+    const template = `
+    INSERT INTO todo (id, taskName, task, finishTask, deleteTask) VALUES ('$ID', '$TASKNAME', '$TASK', '$FINISHTASK', '$DELETETASK');
+       `;
+
+    let sql = template.replace("$ID", todo.id)
+    .replace("$TASKNAME", todo.completed)
+    .replace("$TASK", todo.task)
+    .replace("$FINISHTASK", todo.finishTask)
+    .replace("$DELETETASK", todo.deleteTask)
+
+    return executeQuery(sql);
+}
+
+const remove = async function(id) {
+    const sql = `
+    DELETE todo
+    WHERE id="$ID";
+       `;
+    sql = sql.replace("%ID", id);
+    return executeQuery(sql); 
+}
+
+
+const update = (todo) => {
+    let template = `
+    UPDATE todo
+    SET finishTask=$FINISHTASK,
+        deleteTask=$DELETETASK,
+    WHERE id="$ID";
+       `;
+
+    let sql = template.replace("$ID", todo.id)
+       .replace("$FINISHTASK", todo.finishTask)
+       .replace("$DELETETASK", todo.deleteTask)
+
+    return executeQuery(sql); 
+}
+
 // Avvio del server
 const PORT = 3000;
 app.listen(PORT, () => {
-    console.log('Server in esecuzione su http://localhost:' + PORT);
+    console.log('http in esecuzione su http://localhost:' + PORT);
 });
